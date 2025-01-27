@@ -6,6 +6,53 @@ const path = require('path');
 // Path to the songs folder
 const songsFolder = path.join(__dirname, '../../songs');
 
+// Function to calculate Levenshtein distance for fuzzy matching
+const levenshteinDistance = (a, b) => {
+    const matrix = Array.from({ length: a.length + 1 }, () =>
+        Array(b.length + 1).fill(0)
+    );
+
+    for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+    for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+
+    for (let i = 1; i <= a.length; i++) {
+        for (let j = 1; j <= b.length; j++) {
+            if (a[i - 1] === b[j - 1]) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j] + 1
+                );
+            }
+        }
+    }
+
+    return matrix[a.length][b.length];
+};
+
+// Function to normalize input (lowercase and remove extra spaces)
+const normalize = (str) => str.toLowerCase().trim();
+
+// Function to find the closest match
+const findClosestMatch = (input, filenames) => {
+    const normalizedInput = normalize(input);
+    let closestMatch = null;
+    let lowestDistance = Infinity;
+
+    filenames.forEach(filename => {
+        const normalizedFilename = normalize(filename);
+        const distance = levenshteinDistance(normalizedInput, normalizedFilename);
+        if (distance < lowestDistance) {
+            lowestDistance = distance;
+            closestMatch = filename;
+        }
+    });
+
+    return { closestMatch, lowestDistance };
+};
+
 // Function to get all files recursively
 const getFilesRecursively = (folder) => {
     let files = [];
@@ -61,30 +108,37 @@ module.exports = {
 
             // Get the input from the user
             const input = interaction.options.getString('input');
-            const inputIsNumber = !isNaN(input);
+            const filenames = files.map(file => path.parse(file).name);
+
             let selectedSongPath;
             let selectedSongName;
 
-            if (inputIsNumber) {
-                // Treat input as a song ID
-                const songId = parseInt(input) - 1;
-                if (songId < 0 || songId >= files.length) {
-                    await interaction.reply('Invalid song ID. Please select a valid ID from the playlist.');
-                    return;
-                }
-                selectedSongPath = files[songId];
-                selectedSongName = path.parse(selectedSongPath).name;
+            // Attempt exact match first
+            const exactMatch = files.find(file =>
+                normalize(path.parse(file).name) === normalize(input)
+            );
+
+            if (exactMatch) {
+                selectedSongPath = exactMatch;
+                selectedSongName = path.parse(exactMatch).name;
             } else {
-                // Treat input as a filename
-                const matchedFile = files.find(file =>
-                    path.parse(file).name.toLowerCase() === input.toLowerCase()
-                );
-                if (!matchedFile) {
-                    await interaction.reply('Invalid filename. Please provide a valid song filename (excluding extension).');
+                // Find closest match using Levenshtein distance
+                const { closestMatch, lowestDistance } = findClosestMatch(input, filenames);
+
+                if (closestMatch && lowestDistance <= 6) { // Increase tolerance
+                    selectedSongPath = files.find(file =>
+                        normalize(path.parse(file).name) === normalize(closestMatch)
+                    );
+                    selectedSongName = closestMatch;
+
+                    console.log(`Fuzzy match found: "${closestMatch}" (distance: ${lowestDistance})`);
+                } else {
+                    console.log(`No close match found for input: "${input}"`);
+                    await interaction.reply(
+                        `No exact or close match found for **${input}**. Please try again with a valid song ID or filename.`
+                    );
                     return;
                 }
-                selectedSongPath = matchedFile;
-                selectedSongName = path.parse(matchedFile).name;
             }
 
             const voiceChannel = interaction.member.voice.channel;
