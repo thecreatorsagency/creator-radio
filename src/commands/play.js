@@ -27,10 +27,10 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('play')
         .setDescription('Plays a song from the playlist')
-        .addIntegerOption(option =>
+        .addStringOption(option =>
             option
-                .setName('song')
-                .setDescription('The song ID to play (as shown in /playlist)')
+                .setName('input')
+                .setDescription('The song ID or filename (excluding extension)')
                 .setRequired(true)
         ),
 
@@ -59,14 +59,33 @@ module.exports = {
                 return;
             }
 
-            const songId = interaction.options.getInteger('song') - 1;
-            if (songId < 0 || songId >= files.length) {
-                await interaction.reply('Invalid song ID. Please select a valid ID from the playlist.');
-                return;
-            }
+            // Get the input from the user
+            const input = interaction.options.getString('input');
+            const inputIsNumber = !isNaN(input);
+            let selectedSongPath;
+            let selectedSongName;
 
-            const selectedSongPath = files[songId];
-            const selectedSongName = path.parse(selectedSongPath).name;
+            if (inputIsNumber) {
+                // Treat input as a song ID
+                const songId = parseInt(input) - 1;
+                if (songId < 0 || songId >= files.length) {
+                    await interaction.reply('Invalid song ID. Please select a valid ID from the playlist.');
+                    return;
+                }
+                selectedSongPath = files[songId];
+                selectedSongName = path.parse(selectedSongPath).name;
+            } else {
+                // Treat input as a filename
+                const matchedFile = files.find(file =>
+                    path.parse(file).name.toLowerCase() === input.toLowerCase()
+                );
+                if (!matchedFile) {
+                    await interaction.reply('Invalid filename. Please provide a valid song filename (excluding extension).');
+                    return;
+                }
+                selectedSongPath = matchedFile;
+                selectedSongName = path.parse(matchedFile).name;
+            }
 
             const voiceChannel = interaction.member.voice.channel;
             if (!voiceChannel) {
