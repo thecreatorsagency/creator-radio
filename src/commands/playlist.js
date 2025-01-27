@@ -5,6 +5,9 @@ const path = require('path');
 // Path to the songs folder
 const songsFolder = path.join(__dirname, '../../songs');
 
+// Path to the playlist file inside the songs folder
+const playlistFile = path.join(songsFolder, 'playlist.json');
+
 // Function to get all files recursively
 const getFilesRecursively = (folder) => {
     let files = [];
@@ -57,12 +60,21 @@ module.exports = {
                 return;
             }
 
-            // Generate the playlist with relative paths
-            const playlist = files.map((file, index) => `${index + 1}: ${path.relative(songsFolder, file)}`);
+            // Generate the playlist with IDs and relative paths
+            const playlist = files.map((file, index) => ({
+                id: index + 1,
+                path: path.relative(songsFolder, file),
+            }));
+
+            // Write the playlist to a JSON file inside the songs folder
+            fs.writeFileSync(playlistFile, JSON.stringify({ songs: playlist }, null, 2));
 
             // Paginate the playlist (10 items per page)
             const pageSize = 10;
-            const pages = paginateArray(playlist, pageSize);
+            const pages = paginateArray(
+                playlist.map(song => `${song.id}: ${song.path}`),
+                pageSize
+            );
 
             // Helper to generate embed for a specific page
             const generateEmbed = (pageIndex) => {

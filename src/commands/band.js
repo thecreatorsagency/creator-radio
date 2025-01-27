@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const state = require('../state'); // Import shared state
 
-const targetFolder = path.join(__dirname, '../../songs/Pizza Collection PizzaDAO_s House Band');
+const targetFolder = path.join(__dirname, '../../songs/band');
 
 // Function to shuffle an array
 const shuffleArray = (array) => {

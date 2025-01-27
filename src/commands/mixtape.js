@@ -5,7 +5,7 @@ const path = require('path');
 const state = require('../state'); // Import shared state
 
 // Path to the "PizzaDAO Mixtape" folder
-const mixtapeFolder = path.join(__dirname, '../../songs/PizzaDAO Mixtape');
+const mixtapeFolder = path.join(__dirname, '../../songs/mixtape');
 
 // Function to shuffle an array
 const shuffleArray = (array) => {
