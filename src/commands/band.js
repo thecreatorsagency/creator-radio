@@ -6,6 +6,7 @@ const state = require('../state'); // Import shared state
 
 const targetFolder = path.join(__dirname, '../../songs/Pizza Collection PizzaDAO_s House Band');
 
+// Function to shuffle an array
 const shuffleArray = (array) => {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -21,11 +22,13 @@ module.exports = {
 
     async execute(interaction) {
         try {
+            // Check if the folder exists
             if (!fs.existsSync(targetFolder)) {
                 await interaction.reply('The folder does not exist. Please make sure the songs are in the correct location.');
                 return;
             }
 
+            // Get the list of supported audio files
             const supportedExtensions = ['.mp3', '.wav', '.ogg', '.flac', '.aac', '.m4a', '.wma'];
             const allFiles = fs.readdirSync(targetFolder).filter(file =>
                 supportedExtensions.includes(path.extname(file).toLowerCase())
@@ -36,49 +39,57 @@ module.exports = {
                 return;
             }
 
-            state.queue = shuffleArray(allFiles);
+            // Shuffle the songs and store them in the queue
+            state.queue = shuffleArray([...allFiles]);
 
+            // Check if the user is in a voice channel
             const voiceChannel = interaction.member.voice.channel;
             if (!voiceChannel) {
                 await interaction.reply('You need to be in a voice channel to play music!');
                 return;
             }
 
+            // Join the voice channel
             state.connection = joinVoiceChannel({
                 channelId: voiceChannel.id,
                 guildId: voiceChannel.guild.id,
                 adapterCreator: voiceChannel.guild.voiceAdapterCreator,
             });
 
+            // Create an audio player
             state.player = createAudioPlayer();
 
+            // Function to play the next song in the queue
             const playNextSong = () => {
+                // If the queue is empty, reshuffle and replay
                 if (state.queue.length === 0) {
-                    interaction.followUp('All songs have been played!');
-                    state.connection.destroy();
-                    state.connection = null;
-                    state.player = null;
-                    return;
+                    console.log('Reshuffling the playlist...');
+                    state.queue = shuffleArray([...allFiles]); // Reshuffle all songs
                 }
 
-                const nextSong = state.queue.shift();
+                const nextSong = state.queue.shift(); // Get the next song
                 const resource = createAudioResource(path.join(targetFolder, nextSong));
 
                 console.log(`Playing: ${nextSong}`);
                 state.player.play(resource);
             };
 
+            // Handle the player when it goes idle
             state.player.on(AudioPlayerStatus.Idle, playNextSong);
 
+            // Handle errors during playback
             state.player.on('error', (error) => {
                 console.error('Error during playback:', error);
-                interaction.followUp(`An error occurred while playing the song: ${error.message}`);
-                playNextSong();
+                playNextSong(); // Skip to the next song
             });
 
+            // Subscribe the player to the voice connection
             state.connection.subscribe(state.player);
+
+            // Start playing the first song
             playNextSong();
 
+            // Inform the user that playback has started
             await interaction.reply('🎵 Playing songs from the Pizza Collection PizzaDAO House Band folder in random order!');
         } catch (error) {
             console.error('Error executing the band command:', error);
