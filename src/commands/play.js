@@ -113,31 +113,45 @@ module.exports = {
             let selectedSongPath;
             let selectedSongName;
 
-            // Attempt exact match first
-            const exactMatch = files.find(file =>
-                normalize(path.parse(file).name) === normalize(input)
-            );
-
-            if (exactMatch) {
-                selectedSongPath = exactMatch;
-                selectedSongName = path.parse(exactMatch).name;
-            } else {
-                // Find closest match using Levenshtein distance
-                const { closestMatch, lowestDistance } = findClosestMatch(input, filenames);
-
-                if (closestMatch && lowestDistance <= 6) { // Increase tolerance
-                    selectedSongPath = files.find(file =>
-                        normalize(path.parse(file).name) === normalize(closestMatch)
-                    );
-                    selectedSongName = closestMatch;
-
-                    console.log(`Fuzzy match found: "${closestMatch}" (distance: ${lowestDistance})`);
+            // Check if input is an integer (song index)
+            const inputAsNumber = parseInt(input, 10);
+            if (!isNaN(inputAsNumber)) {
+                // Handle input as song index
+                const index = inputAsNumber - 1; // Convert 1-based to 0-based index
+                if (index >= 0 && index < files.length) {
+                    selectedSongPath = files[index];
+                    selectedSongName = path.parse(files[index]).name;
                 } else {
-                    console.log(`No close match found for input: "${input}"`);
-                    await interaction.reply(
-                        `No exact or close match found for **${input}**. Please try again with a valid song ID or filename.`
-                    );
+                    await interaction.reply(`Invalid song index: ${inputAsNumber}. Please provide a number between 1 and ${files.length}.`);
                     return;
+                }
+            } else {
+                // Handle input as song name (string)
+                const exactMatch = files.find(file =>
+                    normalize(path.parse(file).name) === normalize(input)
+                );
+
+                if (exactMatch) {
+                    selectedSongPath = exactMatch;
+                    selectedSongName = path.parse(exactMatch).name;
+                } else {
+                    // Find closest match using Levenshtein distance
+                    const { closestMatch, lowestDistance } = findClosestMatch(input, filenames);
+
+                    if (closestMatch && lowestDistance <= 6) {
+                        selectedSongPath = files.find(file =>
+                            normalize(path.parse(file).name) === normalize(closestMatch)
+                        );
+                        selectedSongName = closestMatch;
+
+                        console.log(`Fuzzy match found: "${closestMatch}" (distance: ${lowestDistance})`);
+                    } else {
+                        console.log(`No close match found for input: "${input}"`);
+                        await interaction.reply(
+                            `No exact or close match found for **${input}**. Please try again with a valid song ID or filename.`
+                        );
+                        return;
+                    }
                 }
             }
 
