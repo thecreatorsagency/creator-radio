@@ -81,6 +81,7 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 
     if (wasDisconnected) {
         console.log('Bot was disconnected. Attempting to rejoin...');
+        // disabled the automatic rejoin for now
         // joinVoiceChannelHandler();
     }
 });
