@@ -32,7 +32,8 @@ const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('
 // Dynamically set commands in the Collection
 for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
-    const command = require(filePath);
+    const command = 
+    require(filePath);
     // Ensure the command has 'data' and 'execute' properties
     if ('data' in command && 'execute' in command) {
         client.commands.set(command.data.name, command);
