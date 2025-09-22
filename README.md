@@ -1,6 +1,6 @@
-# Pizza Radio 🎵
+# Creator Radio 🎵
 
-Pizza Radio is a Discord bot that brings music to your server, with features designed to play, manage, and skip tracks effortlessly. It's lightweight, easy to set up, and customizable for your needs.
+Creator Radio is a Discord bot that brings music to your server, with features designed to play, manage, and skip tracks effortlessly. It's lightweight, easy to set up, and customizable for your needs. Originally forked from Pizza Radio and adapted for The Creators Collective.
 
 ---
 
@@ -10,19 +10,21 @@ Pizza Radio is a Discord bot that brings music to your server, with features des
 - **Playlist Management**: List available songs to choose from.
 - **Skip Tracks**: Skip to the next song in the queue.
 - **Stop Playback**: Stop the current song, with an option to disconnect the bot.
-- **Mixtape Mode**: Shuffle and play a mix of songs.
+- **Mixtape Mode**: Shuffle and play songs from The Creators Mixtape folder.
+- **Repository Mode**: Play songs from The Creators Collective Repository folder.
+- **Album Management**: Display song IDs for specific albums/folders.
 - **Persistent Voice Channel Connection**: Bot can remain in the voice channel even after stopping playback.
 
 ---
 
 ### 🚀 Installation
 
-Follow these steps to set up Pizza Radio:
+Follow these steps to set up Creator Radio:
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/vincentskele/pizza-radio.git
-   cd pizza-radio
+   git clone https://github.com/thecreatorsagency/creator-radio.git
+   cd creator-radio
    ```
 
 2. **Install Dependencies**:
@@ -42,9 +44,11 @@ Follow these steps to set up Pizza Radio:
 ### 📂 Folder Structure
 
 - **`src/`**: Contains the bot's code and commands.
-  - **`commands/`**: Modular commands like play, stop, skip, and mixtape.
+  - **`commands/`**: Modular commands like play, stop, skip, mixtape, and repo.
   - **`state.js/`**: Shared state management for the bot.
 - **`songs/`**: Folder to store your audio files (not included in the repo).
+  - **`mixtape/`**: The Creators Mixtape folder for curated music.
+  - **`repo/`**: The Creators Collective Repository folder for community music.
 - **`scratch-pad/`**: Utility scripts for deployment and debugging.
 
 ---
@@ -55,8 +59,10 @@ Follow these steps to set up Pizza Radio:
 - `/playlist`: List all available songs.
 - `/skip`: Skip the current song.
 - `/stop`: Stop the music (optionally keeps the bot in the channel).
-- `/mixtape`: Play songs randomly from the collection.
-- `/band`: Manage and play band-related songs.
+- `/mixtape`: Play songs randomly from The Creators Mixtape folder.
+- `/repo`: Play songs randomly from The Creators Collective Repository folder.
+- `/album <folder>`: Display song IDs for a specific album/folder.
+- `/folder`: Manage and play songs from specific folders.
 
 ---
 
